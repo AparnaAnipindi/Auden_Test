@@ -5,6 +5,8 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using TechTalk.SpecFlow;
 
 namespace Auden_Test
@@ -129,6 +131,60 @@ namespace Auden_Test
             SliderAction.MoveToElement(LoanAmountElement);
             SliderAction.Perform();
             Assert.AreEqual(LoanAmount, Amount);
+        }
+
+        [When(@"User selects Last working day")]
+        public void lastDay()
+        {
+            IWebElement lastDayElement = driver.FindElement(By.XPath("//button[text()='Last Working Day']"));
+            Actions MouseAction = new Actions(driver);
+            MouseAction.MoveToElement(lastDayElement).Click().Perform();
+
+        }
+
+            [Then(@"Assert First repayment date is equal to last working day")]
+        public void lastDayAssert()
+        {
+            //wait for the page to load
+            WebDriverWait w = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
+            w.Until(ExpectedConditions.ElementExists(By.XPath("//label[contains(@class, 'first-repayment-date-radio-button')]//span")));
+
+            IWebElement scheduleDateElement = driver.FindElement(By.XPath("//label[contains(@class, 'first-repayment-date-radio-button')]//span"));
+            String scheduleDate = scheduleDateElement.Text;
+
+            //select all holidays for year 2021 in England
+            var Holidays = new List<DateTime>();
+            Holidays.Add(new DateTime(DateTime.Now.Year, 1, 1));
+            Holidays.Add(new DateTime(DateTime.Now.Year, 4,2));
+            Holidays.Add(new DateTime(DateTime.Now.Year, 4,5));
+            Holidays.Add(new DateTime(DateTime.Now.Year, 5,3));
+            Holidays.Add(new DateTime(DateTime.Now.Year, 5,31));
+            Holidays.Add(new DateTime(DateTime.Now.Year, 9,30));
+            Holidays.Add(new DateTime(DateTime.Now.Year, 12, 27));
+            Holidays.Add(new DateTime(DateTime.Now.Year, 12, 28));
+
+            var date = DateTime.Now;
+            var year = date.Year;
+            var month = date.Month;
+            DateTime lastBusinessDay = new DateTime();
+            var i = DateTime.DaysInMonth(year, month);
+            while (i > 0)
+            {
+                var dtCurrent = new DateTime(year, month, i);
+                if (dtCurrent.DayOfWeek < DayOfWeek.Saturday && dtCurrent.DayOfWeek > DayOfWeek.Sunday &&
+                 !Holidays.Contains(dtCurrent))
+                {
+                    lastBusinessDay = dtCurrent;
+                    i = 0;
+                }
+                else
+                {
+                    i = i - 1;
+                }
+
+            }
+            String lastWorkingDay = lastBusinessDay.ToString("dddd d MMM yyyy");
+            Assert.AreEqual(lastWorkingDay, scheduleDate);
         }
 
         [AfterTestRun]

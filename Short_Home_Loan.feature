@@ -23,3 +23,9 @@ Scenario: The selected slider amount is Loan amount
 	Given User is at the Home Page
 	When Slider set to 230
 	Then Assert that the slider amount is equal to Loan amount
+
+Scenario: User selects last working day
+	Given User is at the Home Page
+	And Set Slider to 210
+	When User selects Last working day
+	Then Assert First repayment date is equal to last working day
